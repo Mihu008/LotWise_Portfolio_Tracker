@@ -4,10 +4,10 @@ const { Pool } = require('pg');
 const dbConfig = process.env.DATABASE_URL 
     ? { connectionString: process.env.DATABASE_URL }
     : {
-        user: process.env.DB_USER || 'user',
-        host: process.env.DB_HOST || 'localhost',
+        user: process.env.DB_USER || 'postgres',
+        host: process.env.DB_HOST || 'postgres.railway.internal',
         database: process.env.DB_NAME || 'portfolio',
-        password: process.env.DB_PASSWORD || 'password',
+        password: process.env.DB_PASSWORD || 'JacYnCqDneODEaRjswUxebyTowKzSxks',
         port: 5432,
     };
 

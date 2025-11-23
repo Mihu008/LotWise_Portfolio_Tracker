@@ -63,6 +63,8 @@ qty	decimal	Buy quantity (positive)
 remaining_qty	decimal	Unmatched quantity
 price	decimal	Buy price
 created_at	timestamp	FIFO order basis
+
+
 2. realized_pnl
 
 Stores each matched portion of a sell trade.
