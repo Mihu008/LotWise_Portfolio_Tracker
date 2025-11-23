@@ -38,7 +38,7 @@ export default function RealizedPnL() {
         <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl shadow-lg p-6 text-white flex justify-between items-center">
           <div>
             <h1 className="text-xl font-bold">Performance History</h1>
-            <p className="text-slate-400 text-sm">Realized gains/losses based on FIFO logic</p>
+            <p className="text-slate-400 text-sm">Realized P&L based on FIFO logic</p>
           </div>
           <div className="text-right">
              <div className="text-slate-400 text-xs uppercase font-bold tracking-wider mb-1">Total P&L</div>
