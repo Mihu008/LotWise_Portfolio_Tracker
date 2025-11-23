@@ -124,6 +124,64 @@ If you buy 100 @150, then 50 @160, then sell 80 @170:
 
 Correct realized P&L entries created
 
+-------------------------------------------------------------------------------------------------------------------
+
+🔐 Database Configuration (IMPORTANT)
+
+This project uses PostgreSQL for storing lots and realized P&L.
+You must configure the database credentials before running the backend or worker services.
+
+✅ 1. Environment Files
+
+Each service that connects to the database requires a .env file:
+
+backend/.env
+
+worker/.env
+
+Use the provided .env.example files as a template:
+
+cp backend/.env.example backend/.env
+cp worker/.env.example worker/.env
+
+🔧 2. Required Environment Variables
+
+Set the following variables in both .env files:
+
+POSTGRES_USER=your_user
+POSTGRES_PASSWORD=your_password
+POSTGRES_DB=your_database
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+
+KAFKA_BROKER=localhost:9092
+
+
+⚠️ Do NOT commit real passwords or .env files to Git.
+The repo should only include .env.example.
+
+-------------------------------------------------------------------------------------------------------------------
+
+🐳 Running with Docker
+
+If you use Docker Compose, database credentials must match the variables specified in:
+
+docker-compose.yml
+
+
+Default local-development database configuration:
+
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=portfolio
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+
+
+The database will auto-initialize using init.sql.
+
+-------------------------------------------------------------------------------------------------------------------
+
 🛠️ Running Locally
 Prerequisites
 
