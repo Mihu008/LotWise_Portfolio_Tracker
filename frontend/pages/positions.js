@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import Pager from '../components/Pager';
+import { API_URL } from '../utils/config';
 
 export default function Positions() {
   const [positions, setPositions] = useState([]);
@@ -11,7 +12,7 @@ export default function Positions() {
 
   const fetchData = async () => {
     try {
-      const res = await fetch('http://localhost:3001/positions');
+      const res = await fetch('${API_URL}/positions');
       const data = await res.json();
       setPositions(data);
       setLoading(false);

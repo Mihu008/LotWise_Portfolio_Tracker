@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import Pager from '../components/Pager';
+import { API_URL } from '../utils/config';
 
 export default function RealizedPnL() {
   const [pnl, setPnl] = useState([]);
@@ -10,7 +11,7 @@ export default function RealizedPnL() {
 
   const fetchData = async () => {
     try {
-      const res = await fetch('http://localhost:3001/pnl');
+      const res = await fetch('${API_URL}/pnl');
       const data = await res.json();
       setPnl(data);
       setLoading(false);

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Layout from '../components/Layout';
 import Pager from '../components/Pager';
+import { API_URL } from '../utils/config';
 
 export default function TradeInput() {
   const [form, setForm] = useState({ symbol: 'AAPL', qty: 10, price: 150 });
@@ -10,7 +11,7 @@ export default function TradeInput() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await fetch('http://localhost:3001/trades', {
+      await fetch('${API_URL}/trades', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
