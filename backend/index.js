@@ -7,55 +7,101 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const pool = new Pool({
-    user: 'postgres', 
-    host: process.env.DB_HOST || 'localhost',
-    database: 'portfolio', 
-    password: 'root', 
-    port: 5432,
-});
+const dbConfig = process.env.DATABASE_URL 
+    ? { connectionString: process.env.DATABASE_URL }
+    : {
+        user: process.env.DB_USER || 'user',
+        host: process.env.DB_HOST || 'localhost',
+        database: process.env.DB_NAME || 'portfolio',
+        password: process.env.DB_PASSWORD || 'password',
+        port: 5432,
+    };
 
-const kafka = new Kafka({ clientId: 'api', brokers: [process.env.KAFKA_BROKER || 'localhost:9092'] });
+if (dbConfig.host || dbConfig.connectionString) {
+    dbConfig.ssl = { rejectUnauthorized: false };
+}
+
+const pool = new Pool(dbConfig);
+
+const kafkaConfig = {
+    clientId: 'api',
+    brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
+};
+
+if (process.env.KAFKA_USERNAME) {
+    kafkaConfig.ssl = true;
+    kafkaConfig.sasl = {
+        mechanism: 'plain',
+        username: process.env.KAFKA_USERNAME,
+        password: process.env.KAFKA_PASSWORD,
+    };
+}
+
+const kafka = new Kafka(kafkaConfig);
 const producer = kafka.producer();
 
-const init = async () => {
-    await producer.connect();
-    console.log('Kafka Producer connected');
+const initKafka = async () => {
+    try {
+        await producer.connect();
+        console.log('✅ Kafka Producer connected');
+    } catch (err) {
+        console.error('❌ Kafka Connection Error:', err);
+        setTimeout(initKafka, 5000);
+    }
 };
-init();
+initKafka();
 
-// POST- Add Trade (Publish to Kafka)
 app.post('/trades', async (req, res) => {
     const { symbol, qty, price } = req.body;
-    
     if (!symbol || !qty || !price) return res.status(400).send('Missing fields');
 
-    await producer.send({
-        topic: 'trades',
-        messages: [{ value: JSON.stringify({ symbol, qty: parseFloat(qty), price: parseFloat(price), timestamp: new Date() }) }],
-    });
+    try {
+        const message = {
+            symbol,
+            qty: parseFloat(qty),
+            price: parseFloat(price),
+            timestamp: new Date()
+        };
 
-    res.json({ status: 'queued' });
+        await producer.send({
+            topic: 'trades',
+            messages: [{ value: JSON.stringify(message) }],
+        });
+
+        res.json({ status: 'queued' });
+    } catch (err) {
+        console.error("Kafka Send Error:", err);
+        res.status(500).send("Failed to queue trade");
+    }
 });
 
-// GET- List Positions (Aggregated from open Lots)
+// --- View Data Endpoints ---
+
 app.get('/positions', async (req, res) => {
-    const result = await pool.query(`
-        SELECT 
-            symbol, 
-            SUM(remaining_qty) as total_qty, 
-            SUM(remaining_qty * price) / NULLIF(SUM(remaining_qty), 0) as avg_cost
-        FROM lots 
-        WHERE remaining_qty > 0 
-        GROUP BY symbol
-    `);
-    res.json(result.rows);
+    try {
+        const result = await pool.query(`
+            SELECT 
+                symbol, 
+                SUM(remaining_qty) as total_qty, 
+                SUM(remaining_qty * price) / NULLIF(SUM(remaining_qty), 0) as avg_cost
+            FROM lots 
+            WHERE remaining_qty > 0 
+            GROUP BY symbol
+        `);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
 });
 
-// GET- Realized P&L
 app.get('/pnl', async (req, res) => {
-    const result = await pool.query('SELECT * FROM realized_pnl ORDER BY created_at DESC');
-    res.json(result.rows);
+    try {
+        const result = await pool.query('SELECT * FROM realized_pnl ORDER BY created_at DESC');
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
 });
 
-app.listen(3001, () => console.log('API running on 3001'));
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => console.log(`API running on ${PORT}`));
